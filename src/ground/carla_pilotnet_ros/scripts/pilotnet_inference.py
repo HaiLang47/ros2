@@ -2,7 +2,10 @@
 """PilotNet 推理节点
 
 订阅 /camera/image_raw，用 PilotNet CNN 推理，
-发布 /pilotnet/control（steering + throttle）到 ROS 话题。
+发布 /pilotnet/control（std_msgs/Float32MultiArray: [steering, throttle]）。
+
+图像预处理：BGR -> RGB，resize 到 (input_w, input_h)，归一化到 [0,1]。
+输入图像尺寸不匹配时会自动 resize，但编码必须是 bgr8。
 """
 import os
 import sys
@@ -15,9 +18,19 @@ from std_msgs.msg import Float32MultiArray
 # 从包内 src/ 导入模型
 pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(pkg_root, 'src'))
-from model import PilotNet
 
-import torch
+try:
+    import torch
+except ImportError as e:
+    print("[ERROR] 无法导入 PyTorch: " + str(e))
+    print("[ERROR] 请安装 torch：pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu")
+    sys.exit(1)
+
+try:
+    from model import PilotNet
+except ImportError as e:
+    print("[ERROR] 无法导入 model.py: " + str(e))
+    sys.exit(1)
 
 
 class PilotNetInference:
@@ -29,26 +42,49 @@ class PilotNetInference:
         self.input_w = rospy.get_param('~input_w', 200)
         self.infer_every_n = rospy.get_param('~infer_every_n', 2)
 
+        # 权重路径解析：先模块目录，再当前目录
         if not os.path.isabs(model_path):
-            candidate = os.path.join(pkg_root, model_path)
-            if os.path.exists(candidate):
-                model_path = candidate
+            candidates = [
+                os.path.join(pkg_root, model_path),
+                os.path.join(os.getcwd(), model_path),
+            ]
+            for c in candidates:
+                if os.path.exists(c):
+                    model_path = c
+                    break
 
         self.model = PilotNet(self.input_h, self.input_w)
         if os.path.exists(model_path):
-            self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
-            rospy.loginfo("Loaded weights: " + model_path)
+            try:
+                self.model.load_state_dict(torch.load(model_path, map_location='cpu'))
+                rospy.loginfo("Loaded weights: " + model_path)
+            except Exception as e:
+                rospy.logerr("权重加载失败: " + str(e))
+                rospy.logerr("将使用随机初始化权重（仅用于演示 ROS 话题链路）")
         else:
-            rospy.logwarn("Weight file not found, using random init: " + model_path)
+            rospy.logwarn("未找到权重文件: " + model_path)
+            rospy.logwarn("将使用随机初始化权重（仅用于演示 ROS 话题链路，无实际控制效果）")
+            rospy.logwarn("权重下载：https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt")
         self.model.eval()
 
         self.frame_count = 0
+        self.received_first_image = False
 
+        # 话题命名与 launch 中的 group ns 对应
         self.ctrl_pub = rospy.Publisher('/pilotnet/control', Float32MultiArray, queue_size=1)
         self.annotated_pub = rospy.Publisher('/pilotnet/annotated_image', Image, queue_size=1)
         rospy.Subscriber('/camera/image_raw', Image, self.on_image, queue_size=1)
 
+        # 订阅超时监控：5 秒后还没收到图像就提示
+        rospy.Timer(rospy.Duration(5.0), self._check_subscription)
+
         rospy.loginfo("PilotNet inference node ready")
+        rospy.loginfo("等待 /camera/image_raw 图像...")
+
+    def _check_subscription(self, event):
+        if not self.received_first_image:
+            rospy.logwarn("启动后 5 秒未收到 /camera/image_raw 图像")
+            rospy.logwarn("请检查 image_publisher 节点是否正常运行，或话题名是否匹配")
 
     @staticmethod
     def imgmsg_to_cv2(msg):
@@ -67,23 +103,29 @@ class PilotNetInference:
         return msg
 
     def on_image(self, msg):
+        self.received_first_image = True
+
         try:
             frame = self.imgmsg_to_cv2(msg)
         except Exception as e:
-            rospy.logerr("decode error: " + str(e))
+            rospy.logerr("图像解码失败: " + str(e))
             return
 
         self.frame_count += 1
         if self.frame_count % self.infer_every_n != 0:
             return
 
-        # 预处理：BGR -> RGB，resize，归一化到 [0,1]
+        # 预处理：BGR -> RGB，resize 到网络输入尺寸，归一化到 [0,1]
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(rgb, (self.input_w, self.input_h))
         tensor = torch.from_numpy(resized).float().permute(2, 0, 1).unsqueeze(0) / 255.0
 
-        with torch.no_grad():
-            out = self.model(tensor)
+        try:
+            with torch.no_grad():
+                out = self.model(tensor)
+        except Exception as e:
+            rospy.logerr("推理失败: " + str(e))
+            return
 
         steering = float(out[0, 0].item())
         throttle = float(out[0, 1].item())
@@ -95,7 +137,6 @@ class PilotNetInference:
         rospy.loginfo_throttle(1.0,
             "steering=%.3f throttle=%.3f" % (steering, throttle))
 
-        # 发布标注图像（原图 + 控制指令文本）
         annotated = frame.copy()
         cv2.putText(annotated,
                     "steer=%.2f thr=%.2f" % (steering, throttle),
