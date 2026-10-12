@@ -30,17 +30,17 @@
 ## 依赖安装
 
     conda activate carla38
-    pip install rospkg catkin_pkg empy pyyaml -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install rospkg catkin_pkg empy pyyaml -i https://mirrors.aliyun.com/pypi/simple/
     pip install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cpu --no-deps
-    pip install ultralytics==8.0.196 --no-deps -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install ultralytics==8.0.196 --no-deps -i https://mirrors.aliyun.com/pypi/simple/
 
-## 下载 YOLOv8n 权重
+## 模型权重
 
-本模块不包含模型权重，运行前需下载 `yolov8n.pt`（约 6MB）到模块根目录：
+本模块已包含 `yolov8n.pt`（约 6.3MB），无需额外下载。如需重新获取，可从官方发布页下载：
 
-    wget https://github.com/ultralytics/assets/releases/download/v8.0.0/yolov8n.pt -P ~/nn/src/carla_tsr_ros/
+    wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -P ~/ros2/src/ground/carla_tsr_ros/
 
-或手动下载后放到 `~/nn/src/carla_tsr_ros/yolov8n.pt`。
+或手动下载后放到 `~/ros2/src/ground/carla_tsr_ros/yolov8n.pt`。
 
 ## 编译与运行
 

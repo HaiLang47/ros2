@@ -30,15 +30,15 @@
 ## 依赖安装
 
     conda activate carla38
-    pip install rospkg catkin_pkg empy pyyaml -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install rospkg catkin_pkg empy pyyaml -i https://mirrors.aliyun.com/pypi/simple/
     pip install torch==2.0.1 torchvision==0.15.2 --index-url https://download.pytorch.org/whl/cpu --no-deps
-    pip install ultralytics==8.0.196 --no-deps -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install ultralytics==8.0.196 --no-deps -i https://mirrors.aliyun.com/pypi/simple/
 
-## 下载 YOLOv8n 权重
+## 模型权重
 
-本模块不包含模型权重，运行前需下载 `yolov8n.pt`（约 6MB）到模块根目录：
+本模块已包含 `yolov8n.pt`（约 6.3MB），无需额外下载。如需重新获取，可从官方发布页下载：
 
-    wget https://github.com/ultralytics/assets/releases/download/v8.0.0/yolov8n.pt -P ~/ros2/src/ground/carla_tsr_ros/
+    wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -P ~/ros2/src/ground/carla_tsr_ros/
 
 或手动下载后放到 `~/ros2/src/ground/carla_tsr_ros/yolov8n.pt`。
 
@@ -80,11 +80,13 @@
 
 YOLOv8 是单阶段目标检测网络，将检测问题转化为回归问题。损失函数：
 
-    L = lambda_box * L_CIoU + lambda_cls * L_BCE + lambda_dfl * L_DFL
+$$
+L = \lambda_{box} \cdot L_{CIoU} + \lambda_{cls} \cdot L_{BCE} + \lambda_{dfl} \cdot L_{DFL}
+$$
 
-- `L_CIoU`：边界框回归损失（Complete IoU）
-- `L_BCE`：分类损失（二元交叉熵）
-- `L_DFL`：分布焦点损失
+- \(L_{CIoU}\)：边界框回归损失（Complete IoU）
+- \(L_{BCE}\)：分类损失（二元交叉熵）
+- \(L_{DFL}\)：分布焦点损失
 
 推理输出：对输入图像 I，网络输出 N 个检测结果，每个包含 (cx, cy, w, h, confidence, class_prob)。
 
