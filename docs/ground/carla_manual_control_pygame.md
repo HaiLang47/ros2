@@ -1,4 +1,13 @@
-# Carla 键盘控制车辆
+# Carla 键盘控制车辆（Pygame + HUD 增强版）
+
+> **与 `set_up_and_connect_to_carla` 教程的差异**：
+>
+> - 本模块**不依赖** `carla_ros_bridge`，直接通过 Carla Python API 控制，适合 Windows 端无 ROS 环境的快速测试。
+> - 提供**丰富 HUD**（速度、油门、转向、刹车实时显示），教程中无。
+> - 支持**多传感器视角切换**（RGB、深度、语义分割等）。
+> - 支持**一键切换天气、更换车辆模型**。
+>
+> 基础流程请参考 `set_up_and_connect_to_carla` 教程；本模块定位为增强客户端。
 
 通过键盘手动控制 CARLA 仿真环境中的车辆运行，对应课程任务（1）物理仿真 + 键盘运动控制。
 
@@ -33,7 +42,7 @@
 
 或通过 launch 启动：
 
-       roslaunch carla_manual_control main.launch host:=192.168.56.1
+       roslaunch carla_manual_control_pygame main.launch host:=192.168.56.1
 
 ## 操作说明
 
@@ -48,6 +57,6 @@
 
 ## 运行效果
 
-![运行效果](../img/carla_manual_control_demo.gif)
+![运行效果](../img/carla_manual_control_pygame_demo.gif)
 
 左侧 HUD 实时显示速度、油门、转向、刹车等状态。

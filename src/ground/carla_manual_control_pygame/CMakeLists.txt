@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(carla_manual_control)
+project(carla_manual_control_pygame)
 
 ## Carla 键盘控制车辆
 ##

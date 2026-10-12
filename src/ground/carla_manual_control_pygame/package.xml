@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>carla_manual_control</name>
+  <name>carla_manual_control_pygame</name>
   <version>1.0.0</version>
   <description>
     Carla 仿真环境下基于键盘的车辆手动控制模块。
