@@ -25,7 +25,15 @@ class ControlNode:
         if len(msg.data) < 2:
             return
         steering = max(-self.max_steer, min(self.max_steer, msg.data[0]))
-        throttle = max(0.0, min(self.max_throttle, msg.data[1]))
+        raw_throttle = msg.data[1]
+
+        # 负油门表示刹车意图：油门置零并警告
+        if raw_throttle < 0:
+            throttle = 0.0
+            rospy.logwarn_throttle(2.0,
+                "负油门 %.3f 表示刹车意图，已截断为 0（需外部节点处理刹车）" % raw_throttle)
+        else:
+            throttle = min(self.max_throttle, raw_throttle)
 
         cmd = Twist()
         cmd.linear.x = throttle
