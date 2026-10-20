@@ -16,8 +16,8 @@ class ControlNode:
         self.max_steer = rospy.get_param('~max_steer', 1.0)
         self.max_throttle = rospy.get_param('~max_throttle', 1.0)
 
-        self.cmd_pub = rospy.Publisher('/vehicle/control_cmd', Twist, queue_size=10)
-        rospy.Subscriber('/pilotnet/control', Float32MultiArray, self.on_control, queue_size=10)
+        self.cmd_pub = rospy.Publisher('vehicle/control_cmd', Twist, queue_size=10)
+        rospy.Subscriber('pilotnet/control', Float32MultiArray, self.on_control, queue_size=10)
 
         rospy.loginfo("Control node ready")
 

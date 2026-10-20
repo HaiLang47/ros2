@@ -64,16 +64,16 @@ class PilotNetInference:
         else:
             rospy.logwarn("未找到权重文件: " + model_path)
             rospy.logwarn("将使用随机初始化权重（仅用于演示 ROS 话题链路，无实际控制效果）")
-            rospy.logwarn("权重下载：https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt")
+            rospy.logwarn("权重下载：https://github.com/ultralytics/assets/releases/download/v0.0.0/pilotnet.pth")
         self.model.eval()
 
         self.frame_count = 0
         self.received_first_image = False
 
         # 话题命名与 launch 中的 group ns 对应
-        self.ctrl_pub = rospy.Publisher('/pilotnet/control', Float32MultiArray, queue_size=1)
-        self.annotated_pub = rospy.Publisher('/pilotnet/annotated_image', Image, queue_size=1)
-        rospy.Subscriber('/camera/image_raw', Image, self.on_image, queue_size=1)
+        self.ctrl_pub = rospy.Publisher('pilotnet/control', Float32MultiArray, queue_size=1)
+        self.annotated_pub = rospy.Publisher('pilotnet/annotated_image', Image, queue_size=1)
+        rospy.Subscriber('camera/image_raw', Image, self.on_image, queue_size=1)
 
         # 订阅超时监控：5 秒后还没收到图像就提示
         rospy.Timer(rospy.Duration(5.0), self._check_subscription)

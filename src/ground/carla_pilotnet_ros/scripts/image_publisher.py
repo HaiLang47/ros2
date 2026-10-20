@@ -22,7 +22,7 @@ class ImagePublisher:
             rospy.logerr("No images found in " + full_dir)
             raise RuntimeError("No images found in " + full_dir)
         rospy.loginfo("Found %d images" % len(self.images))
-        self.pub = rospy.Publisher('/camera/image_raw', Image, queue_size=1)
+        self.pub = rospy.Publisher('camera/image_raw', Image, queue_size=1)
         self.rate = rospy.Rate(rate_hz)
         self.idx = 0
 
