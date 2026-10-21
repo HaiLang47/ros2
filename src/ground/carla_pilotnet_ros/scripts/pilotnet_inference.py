@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """PilotNet 推理节点
 
-订阅 /camera/image_raw，用 PilotNet CNN 推理，
-发布 /pilotnet/control（std_msgs/Float32MultiArray: [steering, throttle]）。
+订阅 camera/image_raw，用 PilotNet CNN 推理，
+发布 pilotnet/control（std_msgs/Float32MultiArray: [steering, throttle]）。
+注意：launch 启动时带有 group ns，实际话题为 /carla_pilotnet_ros/...。
 
 图像预处理：BGR -> RGB，resize 到 (input_w, input_h)，归一化到 [0,1]。
 输入图像尺寸不匹配时会自动 resize，但编码必须是 bgr8。
@@ -64,7 +65,7 @@ class PilotNetInference:
         else:
             rospy.logwarn("未找到权重文件: " + model_path)
             rospy.logwarn("将使用随机初始化权重（仅用于演示 ROS 话题链路，无实际控制效果）")
-            rospy.logwarn("权重下载：https://github.com/ultralytics/assets/releases/download/v0.0.0/pilotnet.pth")
+            rospy.logwarn("请确认本模块根目录下包含 pilotnet.pth（项目中已提供）")
         self.model.eval()
 
         self.frame_count = 0
