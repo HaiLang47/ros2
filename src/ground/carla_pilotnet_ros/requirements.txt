@@ -1,0 +1,6 @@
+# 注意：本项目需要 PyTorch，但请先通过 CPU 源手动安装，避免拉取庞大的 CUDA 版本：
+# pip install torch==2.4.1+cpu torchvision==0.19.1+cpu --index-url https://download.pytorch.org/whl/cpu
+# 然后再安装以下依赖：
+opencv-python>=4.5.0
+numpy
+pillow
