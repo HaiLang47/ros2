@@ -87,8 +87,8 @@ class LidarSimulator:
             
             ranges = []
             for i in range(num_rays):
-                angle = self.theta - math.pi + i * scan_msg.angle_increment
-                dist = self.ray_cast((self.x, self.y), angle)
+                angle = -math.pi + i * scan_msg.angle_increment
+                dist = self.ray_cast((self.x, self.y), angle + self.theta)
                 ranges.append(dist)
             scan_msg.ranges = ranges
             self.scan_pub.publish(scan_msg)

@@ -23,9 +23,13 @@ class SyntheticScanDataset(Dataset):
         
         # 定义一些障碍物线段
         self.obstacles = [
-            ((-2.0, 2.0), (-2.0, -2.0)), ((-2.0, -2.0), (2.0, -2.0)),
-            ((2.0, -2.0), (2.0, 2.0)), ((2.0, 2.0), (-2.0, 2.0)),
-            ((0.0, 0.0), (1.0, 1.0)), ((-3.0, 3.0), (3.0, 3.0))
+            ((2.0, 2.0), (2.0, 4.0)), ((2.0, 4.0), (4.0, 4.0)),
+            ((4.0, 4.0), (4.0, 2.0)), ((4.0, 2.0), (2.0, 2.0)),
+            ((-2.0, -2.0), (-2.0, 2.0)), ((-2.0, 2.0), (2.0, 2.0)),
+            ((-2.0, 2.0), (2.0, 2.0)), ((2.0, 2.0), (2.0, -2.0)),
+            ((2.0, -2.0), (-2.0, -2.0)), ((-2.0, -2.0), (-2.0, 2.0)),
+            ((5.0, 5.0), (5.0, 8.0)), ((5.0, 8.0), (8.0, 8.0)),
+            ((8.0, 8.0), (8.0, 5.0)), ((8.0, 5.0), (5.0, 5.0))
         ]
 
     def ray_cast(self, start_pt, angle):
@@ -46,8 +50,8 @@ class SyntheticScanDataset(Dataset):
     def get_scan(self, x, y, theta):
         ranges = []
         for i in range(self.scan_size):
-            angle = theta - math.pi + i * (2 * math.pi / self.scan_size)
-            ranges.append(self.ray_cast((x, y), angle))
+            angle = -math.pi + i * (2 * math.pi / self.scan_size)
+            ranges.append(self.ray_cast((x, y), angle + theta))
         return np.array(ranges, dtype=np.float32)
 
     def __len__(self):

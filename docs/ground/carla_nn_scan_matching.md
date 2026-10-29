@@ -1,4 +1,6 @@
 # 基于 1D CNN 神经网络的 2D 激光雷达 SLAM
+![SLAM Demo](../img/carla_nn_scan_matching_demo.gif)
+
 
 `carla_nn_scan_matching` 是一个完全基于神经网络的 SLAM 前端模块。它使用 1D CNN 处理连续两帧 2D 激光雷达（LaserScan）数据，预测它们之间的相对位姿（Scan Matching），从而彻底摆脱对仿真器“上帝视角”真值坐标的依赖，实现真正的定位与建图。
 
@@ -8,7 +10,7 @@
 
 - **lidar_simulator.py**：生成虚拟的 2D 环境和 LiDAR 扫描数据（10Hz）。
 - **nn_odometry.py**：加载 1D CNN 模型，订阅 `/scan`，输出相对位姿并发布 `/odom` 和 TF 变换。
-- **grid_mapper.py**：订阅 `/scan` 和 `/odom`，实时维护并发布二维占据栅格地图（`/map`）。
+- **mapper.py**：订阅 `/scan` 和 `/odom`，实时维护并发布二维占据栅格地图（`/map`）。
 - **src/model.py**：1D CNN 模型定义。
 - **src/train.py**：合成数据生成与模型训练脚本。
 

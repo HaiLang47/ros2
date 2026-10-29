@@ -9,8 +9,9 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 import tf
 
-pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(pkg_root, 'src'))
+import rospkg
+pkg_root = rospkg.RosPack().get_path("carla_nn_scan_matching")
+sys.path.insert(0, os.path.join(pkg_root, "src"))
 from model import ScanMatcherCNN
 
 class NNOdometry:
