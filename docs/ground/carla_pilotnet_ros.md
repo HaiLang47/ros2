@@ -17,10 +17,10 @@ PilotNet 是 NVIDIA 提出的端到端自动驾驶 CNN，本模块基于 PyTorch
 - 归一化：像素值除以 255，归一化到 [0,1]
 
 ## 依赖安装
-执行：
+请先安装 PyTorch CPU 版本（避免拉取 CUDA），再安装其他依赖：
+
     pip install torch==2.4.1+cpu torchvision==0.19.1+cpu --index-url https://download.pytorch.org/whl/cpu
     pip install -r requirements.txt
-注意：需先指定 PyTorch CPU 源，否则会拉取 CUDA 版本。
 
 ## 编译与运行
     mkdir -p ~/carla_pilotnet_ws/src
