@@ -1,11 +1,11 @@
-# ROS Noetic 与 Conda 环境共存排错指南
+# ROS 与 Conda 环境共存排错指南
 
-在 OpenHUTB 项目中，由于深度学习依赖（PyTorch、Ultralytics）通常安装在 Conda 虚拟环境中，而 ROS Noetic 默认依赖系统的 Python 3.8。两者混合使用时极易出现各种环境报错。本文档总结了常见的排错方案。
+在 OpenHUTB 项目中开发感知、控制等算法模块时（如 #125、#129），深度学习依赖（PyTorch、YOLO）通常安装在 Conda 环境中，而 ROS Noetic 默认依赖系统 Python 3.8。两者混合使用极易导致各类报错，本文总结了 5 个核心排错经验。
 
-## 1. import rospy 报错 ModuleNotFoundError: No module named 'yaml' / 'rospkg'
+## 1. import rospy 报错 ModuleNotFoundError: No module named yaml / rospkg
 
 **原因**：Conda 环境相对独立，没有继承系统 ROS 的基础包。
-**解决**：在 Conda 环境中补齐 ROS 的 Python 依赖：
+**解决**：在 Conda 环境中补齐 ROS 的 Python 依赖（必须固定 empy==3.3.4，否则会导致编译报错）：
 
     pip install pyyaml rospkg catkin_pkg "empy==3.3.4" -i https://mirrors.aliyun.com/pypi/simple/
 
@@ -29,33 +29,25 @@
 ## 4. import torch 或 import ultralytics 失败
 
 **原因**：直接 roslaunch 时调用的是系统 Python 3.8，而依赖装在 Conda 中。
-**解决**：在 launch 文件启动前，通过脚本先激活 Conda 环境，或者显式指定使用 Conda 的 Python 路径：
+**解决**：在 launch 文件启动前，通过脚本先激活 Conda 环境，或者显式指定使用 Conda 的 Python 路径。推荐使用 conda run 或 launch-prefix，**不要直接修改全局 PYTHONPATH**（会导致 cv_bridge 冲突）。
 
-# 推荐做法：不要把 conda 的 site-packages 直接塞进全局 PYTHONPATH（会导致 cv_bridge 冲突）
-# 推荐方式一：使用 conda run 启动单节点
-conda run -n carla38 python my_ros_node.py
+    # 推荐方式一：使用 conda run 启动单节点
+    conda run -n carla38 python my_ros_node.py
 
-# 推荐方式二：在 roslaunch 中使用 launch-prefix
-<node pkg="my_pkg" type="my_node.py" name="my_node" launch-prefix="conda run -n carla38" />
+    # 推荐方式二：在 roslaunch 中使用 launch-prefix
+    <node pkg="my_pkg" type="my_node.py" name="my_node" launch-prefix="conda run -n carla38" />
 
-# 如果确需修改 PYTHONPATH，使用 $CONDA_PREFIX 而非硬编码绝对路径（需先 conda activate）
-export PYTHONPATH=$CONDA_PREFIX/lib/python3.8/site-packages:$PYTHONPATH
-
-# 如果需要编写 main.sh 非交互脚本，必须先 source 环境：
-# source $(conda info --base)/etc/profile.d/conda.sh
-# conda activate carla38
-# roslaunch my_pkg main.launch
+    # 如果需要编写 main.sh 非交互脚本，必须先 source 环境：
+    source $(conda info --base)/etc/profile.d/conda.sh
+    conda activate carla38
 
 ## 5. Linux 下 Carla 客户端报 undefined symbol
 
 **原因**：Conda 环境中的 libc++ 与 Carla whl 不兼容。
-**解决**：在运行节点前设置 LD_PRELOAD：
+**解决**：在运行节点前设置 LD_PRELOAD。**注意：必须先激活 Conda 环境**，否则 $CONDA_PREFIX 为空，会导致节点直接崩溃。
 
-**注意**：必须先激活 Conda 环境，否则 `$CONDA_PREFIX` 为空，会导致节点崩溃。
-
-# 先检查是否已激活环境
-if [ -z "$CONDA_PREFIX" ]; then
-    echo "错误: 请先执行 conda activate carla38"
-    exit 1
-fi
-export LD_PRELOAD=$CONDA_PREFIX/lib/libc++.so.1:$CONDA_PREFIX/lib/libc++abi.so.1
+    if [ -z "$CONDA_PREFIX" ]; then
+        echo "错误: 请先执行 conda activate carla38"
+        exit 1
+    fi
+    export LD_PRELOAD=$CONDA_PREFIX/lib/libc++.so.1:$CONDA_PREFIX/lib/libc++abi.so.1
